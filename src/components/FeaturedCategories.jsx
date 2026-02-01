@@ -51,6 +51,24 @@ const categories = [
     imageUrl:"https://pbs.twimg.com/media/GznmvKpWoAAWFUO?format=jpg&name=900x900",
      link: "Rings"
   },
+        {
+      id: 7,
+    title: "Deals⭒˚.⋆",
+    imageUrl:"https://pbs.twimg.com/media/HAE-w9jaAAAW8TT?format=jpg&name=small",
+     link: "Deals"
+  },
+            {
+      id: 7,
+    title: "Tin wallets⭒˚.⋆",
+    imageUrl:"https://pbs.twimg.com/media/HAE-y74a0AAJlFO?format=jpg&name=large",
+     link: "Tin wallets"
+  },
+                {
+      id: 7,
+    title: "Stickers⭒˚.⋆",
+    imageUrl:"https://pbs.twimg.com/media/HAE-01WbwAAz-WC?format=jpg&name=large",
+     link: "Stickers"
+  },
   //     {
   //     id: 7,
   //   title: "Rings⋆⭒˚.⋆",
