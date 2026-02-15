@@ -69,6 +69,12 @@ const categories = [
     imageUrl:"https://pbs.twimg.com/media/HAE-01WbwAAz-WC?format=jpg&name=large",
      link: "Stickers"
   },
+                    {
+      id: 7,
+    title: "Singhaar nagar⭒˚.⋆",
+    imageUrl:"https://pbs.twimg.com/media/HBLlJYSbkAA6cCB?format=jpg&name=small",
+     link:"Singhaar nagar"
+  },
   //     {
   //     id: 7,
   //   title: "Rings⋆⭒˚.⋆",
