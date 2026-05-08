@@ -308,33 +308,36 @@ const markAsDelivered = async (orderId) => {
     const orderDoc = await getDoc(orderRef);
     const order = orderDoc.data();
     
-    // Deduct stock for each item in the order
-    for (const item of order.items || []) {
-      const productRef = doc(db, "products", item.productId);
-      const productDoc = await getDoc(productRef);
-      const product = productDoc.data();
-      
-      if (product) {
-        let updateData = {};
-        const quantity = item.quantity || 1;
+    // Check if stock was already reduced at order placement
+    if (!order.stockReducedAtOrderPlacement) {
+      // Only deduct stock if it wasn't already reduced
+      for (const item of order.items || []) {
+        const productRef = doc(db, "products", item.productId);
+        const productDoc = await getDoc(productRef);
+        const product = productDoc.data();
         
-        // Deduct stock based on variation/size
-        if (item.variation && product.stock && product.stock[item.variation] !== undefined) {
-          const newStock = Math.max(0, (product.stock[item.variation] || 0) - quantity);
-          updateData[`stock.${item.variation}`] = newStock;
-        } 
-        else if (item.size && product.stock && product.stock[item.size] !== undefined) {
-          const newStock = Math.max(0, (product.stock[item.size] || 0) - quantity);
-          updateData[`stock.${item.size}`] = newStock;
+        if (product) {
+          let updateData = {};
+          const quantity = item.quantity || 1;
+          
+          // Deduct stock based on variation/size
+          if (item.variation && product.stock && product.stock[item.variation] !== undefined) {
+            const newStock = Math.max(0, (product.stock[item.variation] || 0) - quantity);
+            updateData[`stock.${item.variation}`] = newStock;
+          } 
+          else if (item.size && product.stock && product.stock[item.size] !== undefined) {
+            const newStock = Math.max(0, (product.stock[item.size] || 0) - quantity);
+            updateData[`stock.${item.size}`] = newStock;
+          }
+          else {
+            // Deduct from default stock
+            const newDefaultStock = Math.max(0, (product.defaultStock || 0) - quantity);
+            updateData.defaultStock = newDefaultStock;
+          }
+          
+          // Update product stock
+          await updateDoc(productRef, updateData);
         }
-        else {
-          // Deduct from default stock
-          const newDefaultStock = Math.max(0, (product.defaultStock || 0) - quantity);
-          updateData.defaultStock = newDefaultStock;
-        }
-        
-        // Update product stock
-        await updateDoc(productRef, updateData);
       }
     }
     
@@ -344,12 +347,11 @@ const markAsDelivered = async (orderId) => {
       bankTransferProofBase64: null,
     });
     
-    console.log(`Order ${orderId} marked as delivered and stock updated.`);
+    console.log(`Order ${orderId} marked as delivered.`);
   } catch (err) {
     console.error("Failed to mark as delivered:", err);
   }
 };
-
   // New function to delete contact
   const deleteContact = async (contactId) => {
     if (confirm("Are you sure you want to delete this contact message? This action cannot be undone.")) {
