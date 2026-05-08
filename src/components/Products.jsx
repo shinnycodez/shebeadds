@@ -6,12 +6,14 @@ import Newsletter from './Newsletter';
 import Footer from './Footer';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
-import { AiOutlineClose } from 'react-icons/ai';
+import { AiOutlineClose, AiOutlineSearch } from 'react-icons/ai';
 
 function Products() {
   const [filters, setFilters] = useState({});
   const [allProducts, setAllProducts] = useState([]);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredProducts, setFilteredProducts] = useState([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -22,6 +24,7 @@ function Products() {
           ...doc.data(),
         }));
         setAllProducts(productList);
+        setFilteredProducts(productList);
       } catch (error) {
         console.error('Error fetching products:', error);
       }
@@ -29,6 +32,46 @@ function Products() {
 
     fetchProducts();
   }, []);
+
+  // Apply search filter whenever searchQuery or allProducts changes
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredProducts(allProducts);
+    } else {
+      const query = searchQuery.toLowerCase().trim();
+      const filtered = allProducts.filter(product => {
+        // Search by title
+        if (product.title?.toLowerCase().includes(query)) return true;
+        
+        // Search by description
+        if (product.description?.toLowerCase().includes(query)) return true;
+        
+        // Search by category
+        if (product.category?.toLowerCase().includes(query)) return true;
+        
+        // Search by variations (colors)
+        if (product.variations?.some(variation => 
+          variation.toLowerCase().includes(query)
+        )) return true;
+        
+        // Search by sizes
+        if (product.sizes?.some(size => 
+          size.toLowerCase().includes(query)
+        )) return true;
+        
+        return false;
+      });
+      setFilteredProducts(filtered);
+    }
+  }, [searchQuery, allProducts]);
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
 
   return (
     <div
@@ -56,6 +99,37 @@ function Products() {
               </button>
             </div>
 
+            {/* Search Bar Section */}
+            <div className="mb-6">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <AiOutlineSearch className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearch}
+                  placeholder="Search products by name, category, color, size, or description..."
+                  className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black text-base bg-white"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={clearSearch}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    <AiOutlineClose className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+              
+              {/* Search Results Info */}
+              {searchQuery && (
+                <div className="mt-2 text-sm text-gray-600">
+                  Found {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} for "{searchQuery}"
+                </div>
+              )}
+            </div>
+
             {/* Mobile Fullscreen Filter Overlay */}
             {mobileFiltersOpen && (
               <div className="fixed inset-0 z-50 bg-white p-4 overflow-y-auto md:hidden">
@@ -68,13 +142,30 @@ function Products() {
                     <AiOutlineClose className="w-6 h-6" />
                   </button>
                 </div>
-              <SidebarFilters onFilterChange={setFilters} onClose={() => setMobileFiltersOpen(false)} />
-
+                <SidebarFilters onFilterChange={setFilters} onClose={() => setMobileFiltersOpen(false)} />
               </div>
             )}
 
-            <ProductGrid products={allProducts} filters={filters} />
-
+       
+<ProductGrid products={filteredProducts} filters={filters} searchQuery={searchQuery} />
+            {/* No results message */}
+            {filteredProducts.length === 0 && !searchQuery && (
+              <div className="text-center py-12">
+                <p className="text-gray-600">No products available.</p>
+              </div>
+            )}
+            
+            {filteredProducts.length === 0 && searchQuery && (
+              <div className="text-center py-12">
+                <p className="text-gray-600 mb-2">No products found matching "{searchQuery}".</p>
+                <button
+                  onClick={clearSearch}
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  Clear search
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
