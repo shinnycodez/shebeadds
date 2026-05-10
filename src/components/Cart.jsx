@@ -88,7 +88,7 @@ const Cart = ({ isOpen, onClose }) => {
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full z-50 bg-[#a4c2da] shadow-2xl transition-transform duration-300
+      className={`fixed top-0 right-0 h-full z-50 bg-[#FFF4EA] shadow-2xl transition-transform duration-300
         ${isOpen ? 'translate-x-0' : 'translate-x-full'}
         w-full md:w-[400px]`}
     >
@@ -157,7 +157,7 @@ const Cart = ({ isOpen, onClose }) => {
           )}
         </div>
 
-        <div className="p-4 border-t sticky bottom-0 bg-[#a4c2da]">
+        <div className="p-4 border-t sticky bottom-0 bg-[#FFF4EA]">
           <div className="flex justify-between items-center mb-3">
             <span className="text-sm text-gray-600">Total:</span>
             <span className="text-lg font-semibold text-[#141414]">
@@ -168,7 +168,7 @@ const Cart = ({ isOpen, onClose }) => {
             <Link
               to="/checkout"
               onClick={onClose}
-              className="block w-full text-center bg-[#141414] text-white py-2 rounded-lg hover:opacity-90 transition"
+              className="block w-full text-center bg-[#FFC4C4] text-white py-2 rounded-lg hover:opacity-90 transition"
             >
               Proceed to Checkout
             </Link>

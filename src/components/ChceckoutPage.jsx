@@ -38,9 +38,6 @@ const CheckoutPage = () => {
   const [convertingImage, setConvertingImage] = useState(false);
   const [stockValidationErrors, setStockValidationErrors] = useState([]);
 
-  // Constants
-  const MINIMUM_ORDER_VALUE = 1000;
-
   // Load cart items from localStorage or session storage
   useEffect(() => {
     const loadCartFromStorage = () => {
@@ -76,14 +73,24 @@ const CheckoutPage = () => {
   }, []);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingCost = form.city.trim().toLowerCase() === 'karachi' ? 250 : 350;
+  
+  // Updated shipping cost: 350 for other cities, 300 for Multan
+  const getShippingCost = () => {
+    const cityLower = form.city.trim().toLowerCase();
+    if (cityLower === 'multan') {
+      return 300;
+    }
+    return 350;
+  };
+  
+  const shippingCost = getShippingCost();
   const total = subtotal + shippingCost;
 
-  // Check if order meets minimum value requirement
-  const isMinimumOrderMet = subtotal >= MINIMUM_ORDER_VALUE;
-  const remainingAmount = MINIMUM_ORDER_VALUE - subtotal;
+  // For COD: amount to pay now is subtotal, amount to pay at delivery is shippingCost
+  const advancePaymentAmount = form.paymentMethod === 'Cash on Delivery' ? subtotal : total;
+  const codPaymentAmount = form.paymentMethod === 'Cash on Delivery' ? shippingCost : 0;
 
-  // NEW FUNCTION: Validate and reduce stock for each item
+  // Validate and reduce stock for each item
   const validateAndReduceStock = async (items) => {
     const stockErrors = [];
     const stockUpdates = [];
@@ -171,9 +178,10 @@ const CheckoutPage = () => {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
-    // Clear the Base64 string if payment method changes from JazzCash/EasyPaisa
-    if (name === 'paymentMethod' && value !== 'JazzCash/EasyPaisa') {
+    // Clear the Base64 string if payment method changes
+    if (name === 'paymentMethod') {
       setBankTransferProofBase64(null);
+      setErrors(prev => ({ ...prev, bankTransferProof: '' }));
     }
   };
 
@@ -205,12 +213,13 @@ const CheckoutPage = () => {
       reader.readAsDataURL(file);
     } else {
       setBankTransferProofBase64(null);
+      setErrors(prev => ({ ...prev, bankTransferProof: '' }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    const requiredFields = [ 'fullName', 'phone', 'address', 'city', 'country'];
+    const requiredFields = ['fullName', 'phone', 'address', 'city', 'country'];
     requiredFields.forEach(field => {
       if (!form[field]) {
         newErrors[field] = 'This field is required';
@@ -222,14 +231,18 @@ const CheckoutPage = () => {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // Only require bank transfer proof for JazzCash/EasyPaisa
-    if (form.paymentMethod === 'JazzCash/EasyPaisa' && !bankTransferProofBase64) {
-      newErrors.bankTransferProof = 'Please upload a screenshot of your JazzCash transfer or bank transfer receipt.';
+    // Basic phone number validation
+    if (form.phone && !/^\d{7,}$/.test(form.phone.replace(/[\s\-\(\)]/g, ''))) {
+      newErrors.phone = 'Please enter a valid phone number (at least 7 digits)';
     }
 
-    // Check minimum order value
-    if (!isMinimumOrderMet) {
-      newErrors.minimumOrder = `Minimum order value is PKR ${MINIMUM_ORDER_VALUE.toLocaleString()}. Add PKR ${remainingAmount.toLocaleString()} more to proceed.`;
+    // Require bank transfer proof - amount depends on payment method
+    if (!bankTransferProofBase64) {
+      if (form.paymentMethod === 'Cash on Delivery') {
+        newErrors.bankTransferProof = `Please upload a screenshot of your advance payment of PKR ${advancePaymentAmount.toLocaleString()} (product amount).`;
+      } else {
+        newErrors.bankTransferProof = `Please upload a screenshot of your payment of PKR ${advancePaymentAmount.toLocaleString()}.`;
+      }
     }
 
     setErrors(newErrors);
@@ -290,7 +303,7 @@ const CheckoutPage = () => {
 
     const order = {
       orderId,
-      customerType: 'guest', // Mark as guest order
+      customerType: 'guest',
       customerEmail: form.email,
       items: orderItems,
       shipping: form.shippingMethod,
@@ -309,11 +322,14 @@ const CheckoutPage = () => {
       subtotal,
       shippingCost,
       total,
+      // Split payment tracking
+      advancePaymentAmount: advancePaymentAmount, // Amount paid online upfront
+      codPaymentAmount: codPaymentAmount, // Amount to collect at delivery (only for COD)
+      paymentStatus: form.paymentMethod === 'Cash on Delivery' ? 'partial_paid' : 'full_paid',
       createdAt: new Date(),
-      status: 'processing',
-      // Track that stock was already reduced at order placement
+      status: 'pending_payment', // Payment pending until advance payment verified
       stockReducedAtOrderPlacement: true,
-      bankTransferProofBase64: form.paymentMethod === 'JazzCash/EasyPaisa' ? bankTransferProofBase64 : null,
+      bankTransferProofBase64: bankTransferProofBase64,
     };
 
     try {
@@ -331,10 +347,6 @@ const CheckoutPage = () => {
     } catch (err) {
       console.error("Error placing order:", err);
       
-      // Note: Stock has already been reduced at this point
-      // In case of order creation failure, you might want to revert stock changes
-      // This would require implementing a rollback mechanism
-      
       if (err.code === 'resource-exhausted' || (err.message && err.message.includes('too large'))) {
         alert('Error: The uploaded image is too large. Please try a smaller image or contact support.');
       } else {
@@ -350,7 +362,7 @@ const CheckoutPage = () => {
     return (
       <>
         <Header />
-        <div className="min-h-screen bg-[#a4c2da] py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-[#FFF4EA] py-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center py-16">
               <h1 className="text-3xl font-bold text-gray-900 mb-4">Your Cart is Empty</h1>
@@ -371,7 +383,7 @@ const CheckoutPage = () => {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-[#a4c2da] py-8 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-[#FFF4EA] py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumbs */}
           <nav className="flex mb-8" aria-label="Breadcrumb">
@@ -415,30 +427,6 @@ const CheckoutPage = () => {
                   </button>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Minimum Order Alert */}
-          {!isMinimumOrderMet && (
-            <div className="mb-6 p-4 border border-orange-300 bg-orange-50 rounded-md">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-orange-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <div>
-                  <h3 className="text-orange-800 font-medium">Minimum Order Required</h3>
-                  <p className="text-orange-700 text-sm">
-                    Minimum order value is PKR {MINIMUM_ORDER_VALUE.toLocaleString()}. 
-                    Add PKR {remainingAmount.toLocaleString()} more to proceed with checkout.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => navigate('/')}
-                className="mt-3 bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-orange-700 transition"
-              >
-                Continue Shopping
-              </button>
             </div>
           )}
 
@@ -563,7 +551,7 @@ const CheckoutPage = () => {
                   <div className="ml-3">
                     <p className="font-medium text-gray-900">Standard Delivery</p>
                     <p className="text-sm text-gray-500">
-                      PKR 250 for Karachi and 350 for other cities - Delivery in 8-10 business days
+                      PKR 300 for Multan and 350 for other cities - Delivery in 8-10 business days
                     </p>
                   </div>
                 </label>
@@ -582,8 +570,8 @@ const CheckoutPage = () => {
                     className="h-4 w-4 text-black focus:ring-black border-gray-300"
                   />
                   <div className="ml-3">
-                    <span className="font-medium text-gray-900">Cash on Delivery</span>
-                    <p className="text-sm text-gray-500">Pay when your order is delivered</p>
+                    <span className="font-medium text-gray-900">Cash on Delivery (Split Payment)</span>
+                    <p className="text-sm text-gray-500">Pay product amount online in advance, delivery charges at doorstep</p>
                   </div>
                 </label>
                 
@@ -591,69 +579,95 @@ const CheckoutPage = () => {
                   <input
                     type="radio"
                     name="paymentMethod"
-                    value="JazzCash/EasyPaisa"
-                    checked={form.paymentMethod === 'JazzCash/EasyPaisa'}
+                    value="JazzCash"
+                    checked={form.paymentMethod === 'JazzCash'}
                     onChange={handleChange}
                     className="h-4 w-4 text-black focus:ring-black border-gray-300"
                   />
                   <div className="ml-3">
-                    <span className="font-medium text-gray-900">JazzCash/EasyPaisa</span>
-                    <p className="text-sm text-gray-500">Pay online via mobile wallet</p>
+                    <span className="font-medium text-gray-900">JazzCash</span>
+                    <p className="text-sm text-gray-500">Pay full amount online via mobile wallet</p>
                   </div>
                 </label>
               </div>
 
-              {form.paymentMethod === 'JazzCash/EasyPaisa' && (
-                <div className="mt-6 p-4 border border-blue-300 bg-blue-50 rounded-md">
-                  <h3 className="text-base sm:text-lg font-semibold mb-3">JazzCash/EasyPaisa Details</h3>
-                  <p className="text-gray-700 text-sm sm:text-base mb-4">
-                    Please transfer the total amount of PKR {total.toLocaleString()} to our account:
-                  </p>
-                  <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
-                     <li><strong>Account Name:</strong> Muzaffar uddin Ahmed </li>
-                    <li><strong> Number:</strong> 0333 0258436</li>
-                  </ul>
-                  <p className="text-gray-700 text-sm sm:text-base mb-4">
-                    After making the transfer, please upload a screenshot of the transaction or bank transfer receipt as proof of payment.
-                  </p>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Upload Transfer Screenshot/Receipt*
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className={`w-full px-4 py-2 border ${errors.bankTransferProof ? 'border-red-500' : 'border-gray-300'} rounded-md focus:ring-black focus:border-black`}
-                    />
-                    {errors.bankTransferProof && <p className="mt-1 text-sm text-red-600">{errors.bankTransferProof}</p>}
-                    {bankTransferProofBase64 && (
-                      <p className="mt-2 text-sm text-gray-600">Image selected and converted.</p>
-                    )}
-                    {convertingImage && (
-                      <p className="mt-2 text-sm text-gray-600 flex items-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Converting image...
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
+              {/* Payment Details Section - Shows for both payment methods */}
+              <div className="mt-6 p-4 border border-blue-300 bg-blue-50 rounded-md">
+                <h3 className="text-base sm:text-lg font-semibold mb-3">
+                  {form.paymentMethod === 'JazzCash' ? 'JazzCash Details' : 'Cash on Delivery - Split Payment'}
+                </h3>
+                
+                {form.paymentMethod === 'JazzCash' ? (
+                  <>
+                    <p className="text-gray-700 text-sm sm:text-base mb-4">
+                      Please transfer the total amount of PKR {total.toLocaleString()} to our account:
+                    </p>
+                    <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
+                      <li><strong>Account Name:</strong> Marhama</li>
+                      <li><strong>JazzCash Number:</strong> 03336114500</li>
+                    </ul>
+                    <p className="text-gray-700 text-sm sm:text-base mb-4">
+                      After making the transfer, please upload a screenshot of the transaction as proof of payment.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+                      <p className="text-yellow-800 text-sm font-medium mb-2">📝 Split Payment Breakdown:</p>
+                      <ul className="list-disc list-inside text-sm text-gray-700">
+                        <li><strong>Pay Now (Online):</strong> PKR {advancePaymentAmount.toLocaleString()} (Product Amount)</li>
+                        <li><strong>Pay at Delivery:</strong> PKR {codPaymentAmount.toLocaleString()} (Delivery Charges)</li>
+                        <li><strong>Total Order Value:</strong> PKR {total.toLocaleString()}</li>
+                      </ul>
+                    </div>
+                    
+                    <p className="text-gray-700 text-sm sm:text-base mb-4">
+                      Please pay the product amount of PKR {advancePaymentAmount.toLocaleString()} in advance to confirm your order.
+                      Delivery charges of PKR {codPaymentAmount.toLocaleString()} will be collected when your order arrives.
+                    </p>
+                    <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
+                      <li><strong>Account Name:</strong> Marhama</li>
+                      <li><strong>JazzCash Number:</strong> 03336114500</li>
+                    </ul>
+                    <p className="text-gray-700 text-sm sm:text-base mb-4">
+                      After making the advance payment, please upload a screenshot of the transaction as proof of payment.
+                    </p>
+                    <p className="text-red-600 text-sm font-medium">
+                      ⚠️ Note: Your order will only be processed after advance payment confirmation.
+                    </p>
+                  </>
+                )}
 
-              {form.paymentMethod === 'Cash on Delivery' && (
-                <div className="mt-6 p-4 border border-green-300 bg-green-50 rounded-md">
-                  <h3 className="text-base sm:text-lg font-semibold mb-3">Cash on Delivery Information</h3>
-                  <p className="text-gray-700 text-sm sm:text-base mb-2">
-                    You will pay PKR {total.toLocaleString()} when your order is delivered to your address.
-                  </p>
-                  <p className="text-gray-600 text-sm">
-                    Please have the exact amount ready.
-                  </p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Upload Payment Screenshot/Receipt*
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className={`w-full px-4 py-2 border ${errors.bankTransferProof ? 'border-red-500' : 'border-gray-300'} rounded-md focus:ring-black focus:border-black`}
+                  />
+                  {errors.bankTransferProof && <p className="mt-1 text-sm text-red-600">{errors.bankTransferProof}</p>}
+                  {bankTransferProofBase64 && (
+                    <p className="mt-2 text-sm text-green-600 flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Payment proof uploaded successfully!
+                    </p>
+                  )}
+                  {convertingImage && (
+                    <p className="mt-2 text-sm text-gray-600 flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Converting image...
+                    </p>
+                  )}
                 </div>
-              )}
+              </div>
 
               <div className="mt-6">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Promo Code</label>
@@ -705,7 +719,6 @@ const CheckoutPage = () => {
                           <div className="flex items-center gap-1 mt-1">
                             <span className="text-xs text-gray-500">Color:</span>
                             <span className="text-xs font-medium text-gray-700">{item.variation}</span>
-                            {/* Optional: Show a small color swatch */}
                             <div 
                               className="w-3 h-3 rounded-full border border-gray-200"
                               style={{ 
@@ -732,12 +745,12 @@ const CheckoutPage = () => {
 
               <div className="space-y-3 border-t border-gray-200 pt-4">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Subtotal</span>
+                  <span className="text-sm text-gray-600">Subtotal (Products)</span>
                   <span className="text-sm">PKR {subtotal.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Shipping</span>
+                  <span className="text-sm text-gray-600">Delivery Charges</span>
                   <span className="text-sm">PKR {shippingCost.toLocaleString()}</span>
                 </div>
 
@@ -750,22 +763,30 @@ const CheckoutPage = () => {
               </div>
 
               <div className="flex justify-between mt-4 pt-4 border-t border-gray-200">
-                <span className="font-medium text-base sm:text-lg">Total</span>
+                <span className="font-medium text-base sm:text-lg">Total Order Value</span>
                 <span className="font-bold text-base sm:text-lg">PKR {total.toLocaleString()}</span>
               </div>
 
-              {/* Display minimum order error if applicable */}
-              {errors.minimumOrder && (
-                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                  <p className="text-red-600 text-sm">{errors.minimumOrder}</p>
+              {/* Split Payment Breakdown for COD */}
+              {form.paymentMethod === 'Cash on Delivery' && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+                  <p className="text-sm font-medium text-gray-700 mb-2">💰 Payment Breakdown:</p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Pay Now (Online):</span>
+                    <span className="font-medium text-blue-600">PKR {advancePaymentAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm mt-1">
+                    <span className="text-gray-600">Pay at Delivery:</span>
+                    <span className="font-medium text-orange-600">PKR {codPaymentAmount.toLocaleString()}</span>
+                  </div>
                 </div>
               )}
 
               <button
                 onClick={placeOrder}
-                disabled={loading || cartItems.length === 0 || convertingImage || !isMinimumOrderMet}
+                disabled={loading || cartItems.length === 0 || convertingImage}
                 className={`mt-6 w-full py-3 px-4 rounded-md font-medium text-base ${
-                  loading || cartItems.length === 0 || convertingImage || !isMinimumOrderMet
+                  loading || cartItems.length === 0 || convertingImage
                     ? 'bg-gray-400 cursor-not-allowed' 
                     : 'bg-black text-white hover:bg-gray-800'
                 } transition`}
@@ -776,23 +797,21 @@ const CheckoutPage = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    {convertingImage ? 'Converting Image...' : 'Processing Order...'}
+                    {convertingImage ? 'Converting Image...' : 'Placing Order...'}
                   </span>
                 ) : cartItems.length === 0 ? (
                   'Your Cart is Empty'
-                ) : !isMinimumOrderMet ? (
-                  `Add PKR ${remainingAmount.toLocaleString()} More`
                 ) : (
-                  'Place Order'
+                  `Place Order & Pay PKR ${advancePaymentAmount.toLocaleString()} Online`
                 )}
               </button>
 
               <div className="mt-6 text-center text-xs sm:text-sm text-gray-500">
-                <p>100% secure checkout</p>
-                {!isMinimumOrderMet && (
-                  <p className="text-orange-600 mt-2">
-                    Minimum order: PKR {MINIMUM_ORDER_VALUE.toLocaleString()}
-                  </p>
+                <p>🔒 Your payment proof will be reviewed within 24 hours</p>
+                {form.paymentMethod === 'Cash on Delivery' ? (
+                  <p className="mt-1">Order will be processed after advance payment confirmation</p>
+                ) : (
+                  <p className="mt-1">Order will be processed after payment confirmation</p>
                 )}
               </div>
             </div>

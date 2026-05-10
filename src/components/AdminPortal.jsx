@@ -500,22 +500,22 @@ const OrderDetails = ({ order }) => (
   <div className="mt-4 space-y-3 text-sm text-gray-700 p-2 border-t border-gray-200 pt-3">
     <p><strong>Status:</strong> <span className={`font-semibold ${order.status === 'delivered' ? 'text-green-600' : 'text-orange-600'}`}>{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span></p>
     <p><strong>Payment Method:</strong> {order.payment}</p>
-    {order.payment === 'JazzCash/EasyPaisa' && order.bankTransferProofBase64 && (
-      <div className="mt-2">
-        <strong>Bank Transfer Proof:</strong>
-        <div
-          className="mt-1 border border-gray-300 p-2 rounded max-w-full sm:max-w-xs overflow-hidden cursor-pointer hover:border-blue-500 transition-colors duration-200"
-          onClick={() => setViewingImage(order.bankTransferProofBase64)}
-        >
-          <img
-            src={order.bankTransferProofBase64}
-            alt="Bank Transfer Proof"
-            className="w-full h-auto object-contain max-h-64 sm:max-h-80"
-          />
-          <p className="text-center text-xs text-gray-500 mt-1">Click to enlarge</p>
-        </div>
-      </div>
-    )}
+{(order.payment === 'JazzCash' || order.payment === 'Cash on Delivery') && order.bankTransferProofBase64 && (
+  <div className="mt-2">
+    <strong>Payment Proof:</strong>
+    <div
+      className="mt-1 border border-gray-300 p-2 rounded max-w-full sm:max-w-xs overflow-hidden cursor-pointer hover:border-blue-500 transition-colors duration-200"
+      onClick={() => setViewingImage(order.bankTransferProofBase64)}
+    >
+      <img
+        src={order.bankTransferProofBase64}
+        alt="Payment Proof"
+        className="w-full h-auto object-contain max-h-64 sm:max-h-80"
+      />
+      <p className="text-center text-xs text-gray-500 mt-1">Click to enlarge</p>
+    </div>
+  </div>
+)}
     <p><strong>Shipping Method:</strong> {order.shipping}</p>
     <p><strong>Promo Code:</strong> {order.promoCode || "None"}</p>
     <p><strong>Notes:</strong> {order.notes || "None"}</p>

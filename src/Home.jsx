@@ -8,7 +8,7 @@ import ContactForm from './components/ContactForm';
 function Home() {
   return (
     <div
-      className="relative flex size-full min-h-screen flex-col bg-[#a4c2da] group/design-root overflow-x-hidden"
+      className="relative flex size-full min-h-screen flex-col bg-[#FFF4EA] group/design-root overflow-x-hidden"
       style={{ fontFamily: '"Noto Serif", "Noto Sans", sans-serif' }}
     >
       <div className="layout-container flex h-full grow flex-col">

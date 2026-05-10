@@ -34,7 +34,7 @@ const ContactForm = () => {
   return (
     <div className="max-w-full mx-auto mt-10 bg-[#
 #fefaf9] p-8 rounded-2xl shadow-lg border border-white">
-      <h2 className="text-2xl font-bold text-white mb-4 text-center"> Leave a comment</h2>
+      <h2 className="text-2xl font-bold text-black mb-4 text-center"> Leave a comment</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
@@ -62,7 +62,7 @@ const ContactForm = () => {
         />
         <button
           type="submit"
-          className="w-full bg-[#1c5078] hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300"
+          className="w-full bg-[#FFC4C4] hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300"
         >
           ✨ Send
         </button>

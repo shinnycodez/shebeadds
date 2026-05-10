@@ -10,7 +10,7 @@ const OrderThankYou = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-[#a4c2da] p-6 text-center">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-[#FFF4EA] p-6 text-center">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border-4 border-dashed border-pink-200">
         <div className="text-[#1c5078] text-5xl mb-4">
           <FaHeart className="mx-auto animate-bounce" />

@@ -132,14 +132,14 @@ function ProductGrid({ filters = {}, searchQuery = '' }) {
       </div>
 
       {/* Page Title */}
-      <div className="flex items-center gap-3">
+      {/* <div className="flex items-center gap-3">
         <p className="text-[#141414] text-[32px] font-bold">{title}</p>
         <img
           src="https://pbs.twimg.com/media/GznizxLWUAEdik-?format=png&name=small"
           alt="category icon"
           className="w-30 h-25 object-contain"
         />
-      </div>
+      </div> */}
 
       {/* Results count */}
       {searchQuery && (
@@ -181,7 +181,7 @@ function ProductGrid({ filters = {}, searchQuery = '' }) {
                     className={`mt-auto py-2 px-1 rounded-full text-white text-sm font-semibold shadow-md transition-all duration-200 ${
                       product.available === false 
                         ? 'bg-gray-400 cursor-not-allowed' 
-                        : 'bg-[#1c5078] hover:bg-gray-900'
+                        : 'bg-[#FFC4C4] hover:bg-gray-900'
                     }`}
                     disabled={product.available === false}
                     onClick={(e) => {

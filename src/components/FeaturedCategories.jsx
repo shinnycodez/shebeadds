@@ -2,17 +2,18 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const categories = [
-    {
-    id: 1,
-    title: "Bracelets ˚⊹♡",
-    imageUrl: "https://pbs.twimg.com/media/GznH7jPX0AAcjhY?format=jpg&name=small",
-    link: "Bracelets"
+          {
+    id: 5,
+    title: "Pendants⋆⭒˚.⋆",
+    imageUrl:"https://pbs.twimg.com/media/HH9MDrcacAAEeD4?format=jpg&name=900x900",
+     link: "Pendants"
   },
+
   {
-    id: 2,
-    title: "Keychains ⋆｡𖦹°",
-    imageUrl: "https://pbs.twimg.com/media/GznH9wAXcAAHGHW?format=jpg&name=small",
-      link: "Keychains",
+    id: 7,
+    title: "Bracelets ⋆｡𖦹°",
+    imageUrl: "https://pbs.twimg.com/media/HH9HhrvbUAA0S-Y?format=jpg&name=900x900",
+      link: "Bracelets",
   },
 
 
@@ -23,58 +24,77 @@ const categories = [
   // },
       {
     id: 3,
-    title: "Necklaces ˚⋆𐙚｡",
-    imageUrl: "https://pbs.twimg.com/media/GznH_XSWwAA1CYD?format=jpg&name=small",
-      link: "Necklaces"
+    title: "Phone charms ˚⋆𐙚｡",
+    imageUrl: "https://pbs.twimg.com/media/HH83ti3awAAxFnj?format=jpg&name=large",
+      link: "Phone charms"
   },
       {
     id: 4,
-    title: "Phone charms ｡°✩",
-    imageUrl:"https://pbs.twimg.com/media/GznQLhOXUAAhR3Q?format=jpg&name=medium",
-     link: "Phone charms"
+    title: "Bag charms ｡°✩",
+    imageUrl:"https://pbs.twimg.com/media/HH83vgHakAAjGqo?format=jpg&name=large",
+     link: "Bag charms"
   },
-        {
-    id: 5,
-    title: "Crochet items⋆⭒˚.⋆",
-    imageUrl:"https://pbs.twimg.com/media/GznIjt0WMAArHpR?format=jpg&name=small",
-     link: "Crochet items"
+    {
+    id: 1,
+    title: "Earrings ˚⊹♡",
+    imageUrl: "https://pbs.twimg.com/media/HH9IVqhbEAAk3KQ?format=jpg&name=medium",
+    link: "Earrings"
   },
   {
       id: 6,
-    title: "Others ⋆⭒˚.⋆",
-    imageUrl:"https://pbs.twimg.com/media/GznIh03WIAAc_7-?format=jpg&name=small",
-     link: "Others"
+    title: "Bangles ⋆⭒˚.⋆",
+    imageUrl:"https://pbs.twimg.com/media/HH85GWRbIAAsj17?format=jpg&name=large",
+     link: "Bangles"
+  },
+      {
+    id: 2,
+    title: "Beaded Bracelets ⋆｡𖦹°",
+    imageUrl: "https://pbs.twimg.com/media/HH85dyQbIAAuc_Y?format=jpg&name=large",
+      link: "Beaded Bracelets",
   },
     {
       id: 7,
-    title: "Rings⭒˚.⋆",
-    imageUrl:"https://pbs.twimg.com/media/GznmvKpWoAAWFUO?format=jpg&name=900x900",
-     link: "Rings"
+    title: "Handcuffs⭒˚.⋆",
+    imageUrl:"https://pbs.twimg.com/media/HH9A7i6WEAEaSA9?format=jpg&name=large",
+     link: "Handcuffs"
   },
+
         {
       id: 7,
-    title: "Deals⭒˚.⋆",
-    imageUrl:"https://pbs.twimg.com/media/HAE-w9jaAAAW8TT?format=jpg&name=small",
-     link: "Deals"
+    title: "Resin Jhmnky⭒˚.⋆",
+    imageUrl:"https://pbs.twimg.com/media/HH9A-N8XsAAMykj?format=jpg&name=large",
+     link: "Resin Jhumky"
   },
             {
       id: 7,
-    title: "Tin wallets⭒˚.⋆",
-    imageUrl:"https://pbs.twimg.com/media/HAE-y74a0AAJlFO?format=jpg&name=large",
-     link: "Tin wallets"
+    title: "Custom charm jewellery⭒˚.⋆",
+    imageUrl:"https://pbs.twimg.com/media/HH9A07cWsAAuLpA?format=jpg&name=large",
+     link: "Custom charm jewellery"
+  },
+              {
+      id: 7,
+    title: "Hand Chains⭒˚.⋆",
+    imageUrl:"https://pbs.twimg.com/media/HH9H-HsbsAAja7f?format=jpg&name=large",
+     link: "Hand Chains"
   },
                 {
       id: 7,
-    title: "Stickers⭒˚.⋆",
-    imageUrl:"https://pbs.twimg.com/media/HAE-01WbwAAz-WC?format=jpg&name=large",
-     link: "Stickers"
+    title: "Earcuffs⭒˚.⋆",
+    imageUrl:"https://pbs.twimg.com/media/HH9ISPUbIAAjPvL?format=jpg&name=large",
+     link: "Earcuffs"
   },
-                    {
-      id: 7,
-    title: "Singhaar nagar⭒˚.⋆",
-    imageUrl:"https://pbs.twimg.com/media/HBLlJYSbkAA6cCB?format=jpg&name=small",
-     link:"Singhaar nagar"
-  },
+  //               {
+  //     id: 7,
+  //   title: "Stickers⭒˚.⋆",
+  //   imageUrl:"https://pbs.twimg.com/media/HAE-01WbwAAz-WC?format=jpg&name=large",
+  //    link: "Stickers"
+  // },
+  //                   {
+  //     id: 7,
+  //   title: "Singhaar nagar⭒˚.⋆",
+  //   imageUrl:"https://pbs.twimg.com/media/HBLlJYSbkAA6cCB?format=jpg&name=small",
+  //    link:"Singhaar nagar"
+  // },
   //     {
   //     id: 7,
   //   title: "Rings⋆⭒˚.⋆",
@@ -104,7 +124,7 @@ const categories = [
 function FeaturedCategories() {
   return (
 <div>
-  <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
+  <h2 className="text-black text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
     Featured Categories
   </h2>
 
