@@ -32,7 +32,7 @@ const Header = () => {
     }
   };
 
-  const adminEmails = ["mueezimran1@gmail.com", "mallojewels1@gmail.com"];
+  const adminEmails = ["mueezimran1@gmail.com", "marhamaqeel2023@gmail.com"];
 
   return (
     <>

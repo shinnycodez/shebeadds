@@ -61,6 +61,10 @@ const BuyNowCheckout = () => {
   const shippingCost = getShippingCost();
   const total = subtotal + shippingCost;
 
+  // For COD: amount to pay now is subtotal, amount to pay at delivery is shippingCost
+  const advancePaymentAmount = form.paymentMethod === 'Cash on Delivery' ? subtotal : total;
+  const codPaymentAmount = form.paymentMethod === 'Cash on Delivery' ? shippingCost : 0;
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm(prev => ({
@@ -211,9 +215,13 @@ const BuyNowCheckout = () => {
       newErrors.phone = 'Please enter a valid phone number (at least 7 digits)';
     }
 
-    // Require bank transfer proof for ALL payment methods (both JazzCash and COD)
+    // Require bank transfer proof - amount depends on payment method
     if (!bankTransferProofBase64) {
-      newErrors.bankTransferProof = 'Please upload a screenshot of your payment transfer as proof.';
+      if (form.paymentMethod === 'Cash on Delivery') {
+        newErrors.bankTransferProof = `Please upload a screenshot of your advance payment of PKR ${advancePaymentAmount.toLocaleString()} (product amount).`;
+      } else {
+        newErrors.bankTransferProof = `Please upload a screenshot of your payment of PKR ${advancePaymentAmount.toLocaleString()}.`;
+      }
     }
 
     setErrors(newErrors);
@@ -285,6 +293,10 @@ const BuyNowCheckout = () => {
       subtotal,
       shippingCost,
       total,
+      // Split payment tracking
+      advancePaymentAmount: advancePaymentAmount,
+      codPaymentAmount: codPaymentAmount,
+      paymentStatus: form.paymentMethod === 'Cash on Delivery' ? 'partial_paid' : 'full_paid',
       createdAt: new Date(),
       status: 'pending_payment', // Payment pending until verified
       buyNow: true,
@@ -533,30 +545,41 @@ const BuyNowCheckout = () => {
               <h2 className="text-lg sm:text-xl font-semibold mt-8 mb-6 pb-2 border-b">Payment Method</h2>
               
               <div className="space-y-4">
-                {['Cash on Delivery', 'JazzCash'].map(method => (
-                  <label key={method} className="flex items-center p-4 border rounded-md hover:border-black cursor-pointer">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value={method}
-                      checked={form.paymentMethod === method}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-black focus:ring-black border-gray-300"
-                    />
-                    <div className="ml-3">
-                      <span className="font-medium text-gray-900 text-sm sm:text-base">{method}</span>
-                      <p className="text-xs sm:text-sm text-gray-500">
-                        {method === 'Cash on Delivery' ? 'Pay online in advance before delivery' : 'Pay online via mobile wallet'}
-                      </p>
-                    </div>
-                  </label>
-                ))}
+                <label className="flex items-center p-4 border rounded-md hover:border-black cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="Cash on Delivery"
+                    checked={form.paymentMethod === 'Cash on Delivery'}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-black focus:ring-black border-gray-300"
+                  />
+                  <div className="ml-3">
+                    <span className="font-medium text-gray-900 text-sm sm:text-base">Cash on Delivery (Split Payment)</span>
+                    <p className="text-xs sm:text-sm text-gray-500">Pay product amount online in advance, delivery charges at doorstep</p>
+                  </div>
+                </label>
+                
+                <label className="flex items-center p-4 border rounded-md hover:border-black cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="JazzCash"
+                    checked={form.paymentMethod === 'JazzCash'}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-black focus:ring-black border-gray-300"
+                  />
+                  <div className="ml-3">
+                    <span className="font-medium text-gray-900 text-sm sm:text-base">JazzCash</span>
+                    <p className="text-xs sm:text-sm text-gray-500">Pay full amount online via mobile wallet</p>
+                  </div>
+                </label>
               </div>
 
               {/* Payment Details Section - Shows for both payment methods */}
               <div className="mt-6 p-4 border border-blue-300 bg-blue-50 rounded-md">
                 <h3 className="text-base sm:text-lg font-semibold mb-3">
-                  {form.paymentMethod === 'JazzCash' ? 'JazzCash Details' : 'Cash on Delivery - Advance Payment'}
+                  {form.paymentMethod === 'JazzCash' ? 'JazzCash Details' : 'Cash on Delivery - Split Payment'}
                 </h3>
                 
                 {form.paymentMethod === 'JazzCash' ? (
@@ -574,20 +597,28 @@ const BuyNowCheckout = () => {
                   </>
                 ) : (
                   <>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+                      <p className="text-yellow-800 text-sm font-medium mb-2">📝 Split Payment Breakdown:</p>
+                      <ul className="list-disc list-inside text-sm text-gray-700">
+                        <li><strong>Pay Now (Online):</strong> PKR {advancePaymentAmount.toLocaleString()} (Product Amount)</li>
+                        <li><strong>Pay at Delivery:</strong> PKR {codPaymentAmount.toLocaleString()} (Delivery Charges)</li>
+                        <li><strong>Total Order Value:</strong> PKR {total.toLocaleString()}</li>
+                      </ul>
+                    </div>
+                    
                     <p className="text-gray-700 mb-4 text-sm sm:text-base">
-                      Please pay the total amount of PKR {total.toLocaleString()} in advance to confirm your order.
+                      Please pay the product amount of PKR {advancePaymentAmount.toLocaleString()} in advance to confirm your order.
+                      Delivery charges of PKR {codPaymentAmount.toLocaleString()} will be collected when your order arrives.
                     </p>
                     <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
-                      <li><strong>Bank Title:</strong> [Your Bank Name]</li>
-                      <li><strong>Account Title:</strong> Muzaffar uddin Ahmed</li>
-                      <li><strong>Account Number:</strong> [Your Bank Account Number]</li>
-                      <li><strong>IBAN:</strong> [Your IBAN]</li>
+                      <li><strong>Account Name:</strong> Muzaffar uddin Ahmed</li>
+                      <li><strong>JazzCash Number:</strong> 0333 0258436</li>
                     </ul>
                     <p className="text-gray-700 mb-4 text-sm sm:text-base">
-                      After making the payment, please upload a screenshot of the bank transfer receipt as proof of payment.
+                      After making the advance payment, please upload a screenshot of the transaction as proof of payment.
                     </p>
                     <p className="text-red-600 text-sm font-medium">
-                      ⚠️ Note: Your order will only be processed after payment confirmation.
+                      ⚠️ Note: Your order will only be processed after advance payment confirmation.
                     </p>
                   </>
                 )}
@@ -705,12 +736,12 @@ const BuyNowCheckout = () => {
 
               <div className="space-y-3 border-t border-gray-200 pt-4">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Subtotal</span>
+                  <span className="text-sm text-gray-600">Subtotal (Products)</span>
                   <span className="text-sm">PKR {subtotal.toLocaleString()}</span>
                 </div>
                 
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Shipping</span>
+                  <span className="text-sm text-gray-600">Delivery Charges</span>
                   <span className="text-sm">PKR {shippingCost.toLocaleString()}</span>
                 </div>
                 
@@ -723,9 +754,24 @@ const BuyNowCheckout = () => {
               </div>
 
               <div className="flex justify-between mt-4 pt-4 border-t border-gray-200">
-                <span className="font-medium text-base sm:text-lg">Total to Pay</span>
+                <span className="font-medium text-base sm:text-lg">Total Order Value</span>
                 <span className="font-bold text-base sm:text-lg">PKR {total.toLocaleString()}</span>
               </div>
+
+              {/* Split Payment Breakdown for COD */}
+              {form.paymentMethod === 'Cash on Delivery' && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+                  <p className="text-sm font-medium text-gray-700 mb-2">💰 Payment Breakdown:</p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Pay Now (Online):</span>
+                    <span className="font-medium text-blue-600">PKR {advancePaymentAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm mt-1">
+                    <span className="text-gray-600">Pay at Delivery:</span>
+                    <span className="font-medium text-orange-600">PKR {codPaymentAmount.toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
 
               <button
                 onClick={placeOrder}
@@ -747,13 +793,17 @@ const BuyNowCheckout = () => {
                 ) : cartItems.length === 0 ? (
                   'No Items to Order'
                 ) : (
-                  'Place Order & Upload Payment Proof'
+                  `Place Order & Pay PKR ${advancePaymentAmount.toLocaleString()} Online`
                 )}
               </button>
 
               <div className="mt-6 text-center text-xs sm:text-sm text-gray-500">
                 <p>🔒 Your payment proof will be reviewed within 24 hours</p>
-                <p className="mt-1">Order will be processed after payment confirmation</p>
+                {form.paymentMethod === 'Cash on Delivery' ? (
+                  <p className="mt-1">Order will be processed after advance payment confirmation</p>
+                ) : (
+                  <p className="mt-1">Order will be processed after payment confirmation</p>
+                )}
               </div>
             </div>
           </div>
