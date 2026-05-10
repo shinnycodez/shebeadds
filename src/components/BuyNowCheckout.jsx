@@ -588,8 +588,8 @@ const BuyNowCheckout = () => {
                       Please transfer the total amount of PKR {total.toLocaleString()} to our account:
                     </p>
                     <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
-                      <li><strong>Account Name:</strong> Muzaffar uddin Ahmed</li>
-                      <li><strong>JazzCash Number:</strong> 0333 0258436</li>
+                          <li><strong>Account Name:</strong> Marhama</li>
+                      <li><strong>JazzCash Number:</strong> 03336114500</li>
                     </ul>
                     <p className="text-gray-700 mb-4 text-sm sm:text-base">
                       After making the transfer, please upload a screenshot of the transaction as proof of payment.
@@ -611,8 +611,8 @@ const BuyNowCheckout = () => {
                       Delivery charges of PKR {codPaymentAmount.toLocaleString()} will be collected when your order arrives.
                     </p>
                     <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
-                      <li><strong>Account Name:</strong> Muzaffar uddin Ahmed</li>
-                      <li><strong>JazzCash Number:</strong> 0333 0258436</li>
+                          <li><strong>Account Name:</strong> Marhama</li>
+                      <li><strong>JazzCash Number:</strong> 03336114500</li>
                     </ul>
                     <p className="text-gray-700 mb-4 text-sm sm:text-base">
                       After making the advance payment, please upload a screenshot of the transaction as proof of payment.
