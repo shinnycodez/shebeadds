@@ -8,7 +8,7 @@ function SidebarFilters({ onFilterChange, onClose }) {
   });
 
   const options = {
-    Category: ['Phone charms', 'Keychains', 'Bracelet', 'Earings', 'Necklaces', 'Plushies'],
+  
     Availability: [true, false],
   };
 
